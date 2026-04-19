@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Where Is My Bus — Live Bus Tracking India</title>
+  <meta name="description" content="Real-time bus tracking across India. Find buses, check seat availability, track your journey, estimate fares and get arrival alerts." />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body class="light-mode">
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════ -->
+<header class="header" id="main-header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="logo-wrap">
+        <span class="logo-icon">🚌</span>
+        <div class="logo-text">
+          <span class="logo-title">Where Is My Bus</span>
+          <span class="logo-sub">Live Bus Tracking — India</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-clock" id="live-clock">00:00:00</div>
+      <div class="live-indicator"><span class="pulse-dot"></span>LIVE</div>
+      <button class="theme-btn" id="theme-toggle" title="Toggle theme">☀️</button>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ HERO ══════════════════════════════════════════════════ -->
+<section class="hero-section" id="hero">
+  <div class="hero-bg-anim"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">Track Your Bus.<br><span class="hero-accent">Real‑Time.</span></h1>
+    <p class="hero-sub">Live location · Seat availability · Fare estimator · Arrival alerts</p>
+    <div class="hero-stats">
+      <div class="stat-chip"><span class="stat-num">2,400+</span><span class="stat-lbl">Buses Live</span></div>
+      <div class="stat-chip"><span class="stat-num">850+</span><span class="stat-lbl">Routes</span></div>
+      <div class="stat-chip"><span class="stat-num">75</span><span class="stat-lbl">Districts</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SEARCH CARD ═══════════════════════════════════════════ -->
+<section class="search-section" id="search-section">
+  <div class="search-card glass-card">
+
+    <div class="tab-bar" role="tablist">
+      <button class="tab active" data-tab="find"    role="tab" aria-selected="true"><span class="tab-icon">🔍</span><span class="tab-label">Find Buses</span></button>
+      <button class="tab" data-tab="booking" role="tab"><span class="tab-icon">🎫</span><span class="tab-label">Booking&nbsp;ID</span></button>
+      <button class="tab" data-tab="stand"   role="tab"><span class="tab-icon">📍</span><span class="tab-label">Bus Stand</span></button>
+      <button class="tab" data-tab="number"  role="tab"><span class="tab-icon">🚏</span><span class="tab-label">Bus&nbsp;No.</span></button>
+      <button class="tab" data-tab="running" role="tab"><span class="tab-icon">🗺️</span><span class="tab-label">Running</span></button>
+      <button class="tab" data-tab="nearby"  role="tab"><span class="tab-icon">⭐</span><span class="tab-label">Nearby</span></button>
+    </div>
+
+    <!-- Find Buses -->
+    <div class="tab-pane active" id="pane-find" role="tabpanel">
+      <div class="find-grid">
+        <div class="city-field" id="from-field">
+          <label class="field-label">🟢 From</label>
+          <input type="text" id="from-input" class="city-input" placeholder="Origin city…" autocomplete="off" />
+          <ul class="autocomplete-list" id="from-ac"></ul>
+        </div>
+        <button class="swap-btn" id="swap-btn" title="Swap cities">⇄</button>
+        <div class="city-field" id="to-field">
+          <label class="field-label">🔴 To</label>
+          <input type="text" id="to-input" class="city-input" placeholder="Destination city…" autocomplete="off" />
+          <ul class="autocomplete-list" id="to-ac"></ul>
+        </div>
+      </div>
+      <div class="find-options">
+        <div class="option-group">
+          <label class="field-label">📅 Date</label>
+          <input type="date" id="travel-date" class="opt-input" />
+        </div>
+        <div class="option-group">
+          <label class="field-label">🚌 Bus Type</label>
+          <select id="bus-type-filter" class="opt-input">
+            <option value="">All Types</option>
+            <option value="AC Sleeper">AC Sleeper 🛏️</option>
+            <option value="Non-AC Seater">Non-AC Seater 🪑</option>
+            <option value="Volvo AC">Volvo AC 🚌</option>
+            <option value="Premium EV">Premium EV ⚡</option>
+            <option value="Semi-Sleeper">Semi-Sleeper 💺</option>
+          </select>
+        </div>
+        <div class="option-group">
+          <label class="field-label">👤 Passengers</label>
+          <select id="passengers" class="opt-input">
+            <option value="1">1 Passenger</option>
+            <option value="2">2 Passengers</option>
+            <option value="3">3 Passengers</option>
+            <option value="4">4 Passengers</option>
+          </select>
+        </div>
+      </div>
+      <button class="primary-btn" id="find-btn"><span>🔍 Search Buses</span></button>
+    </div>
+
+    <!-- Booking ID -->
+    <div class="tab-pane" id="pane-booking" role="tabpanel">
+      <div class="booking-wrap">
+        <p class="booking-hint">Enter your Booking ID to check journey status, seat number and live bus location</p>
+        <div class="booking-row">
+          <input type="text" id="booking-input" class="city-input" placeholder="e.g. BK2024123456" maxlength="14" />
+          <button class="primary-btn compact" id="booking-btn">🎫 Track</button>
+        </div>
+        <div class="booking-samples">
+          <span class="sample-label">Try sample IDs:</span>
+          <button class="sample-id" data-id="BK2024001234">BK2024001234</button>
+          <button class="sample-id" data-id="BK2024005678">BK2024005678</button>
+          <button class="sample-id" data-id="BK2024009999">BK2024009999</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bus Stand Live Board -->
+    <div class="tab-pane" id="pane-stand" role="tabpanel">
+      <div class="stand-row">
+        <div class="city-field" style="flex:1">
+          <label class="field-label">📍 Bus Stand / City</label>
+          <input type="text" id="stand-input" class="city-input" placeholder="Enter city or bus stand name…" autocomplete="off" />
+          <ul class="autocomplete-list" id="stand-ac"></ul>
+        </div>
+        <div class="option-group">
+          <label class="field-label">⏱️ Window</label>
+          <select id="stand-window" class="opt-input">
+            <option value="1">Next 1 hour</option>
+            <option value="2" selected>Next 2 hours</option>
+            <option value="4">Next 4 hours</option>
+          </select>
+        </div>
+        <button class="primary-btn compact" id="stand-btn">📋 Show Board</button>
+      </div>
+    </div>
+
+    <!-- Bus Number -->
+    <div class="tab-pane" id="pane-number" role="tabpanel">
+      <div class="booking-row">
+        <input type="text" id="busno-input" class="city-input" placeholder="Enter Bus Number e.g. UP32 AB 1234" />
+        <button class="primary-btn compact" id="busno-btn">🚏 Track</button>
+      </div>
+    </div>
+
+    <!-- Running Buses -->
+    <div class="tab-pane" id="pane-running" role="tabpanel">
+      <div class="find-options">
+        <div class="option-group" style="flex:1">
+          <label class="field-label">📡 Filter by State</label>
+          <select id="running-state" class="opt-input">
+            <option value="">All States — India</option>
+          </select>
+        </div>
+        <div class="option-group" style="flex:1">
+          <label class="field-label">📍 Filter by District</label>
+          <select id="running-district-sel" class="opt-input">
+            <option value="">All Districts</option>
+          </select>
+        </div>
+        <div class="option-group">
+          <label class="field-label">🏷️ Operator</label>
+          <select id="running-operator" class="opt-input">
+            <option value="">All Operators</option>
+            <option value="UPSRTC">UPSRTC</option>
+            <option value="Parivaahan Express">Parivaahan Express</option>
+            <option value="GreenLine Travels">GreenLine Travels</option>
+            <option value="RoyalCruise Volvo">RoyalCruise Volvo</option>
+            <option value="CityConnect Bus">CityConnect Bus</option>
+          </select>
+        </div>
+      </div>
+      <button class="primary-btn" id="running-btn">🗺️ Show Running Buses</button>
+    </div>
+
+    <!-- Nearby Stops -->
+    <div class="tab-pane" id="pane-nearby" role="tabpanel">
+      <div class="nearby-center">
+        <div class="nearby-icon-wrap"><span class="nearby-icon">📡</span></div>
+        <p class="nearby-text">Find Bus Stops Near You</p>
+        <p class="nearby-sub">Allow location access to discover nearby bus stops and live arrivals</p>
+        <button class="primary-btn" id="nearby-btn">📍 Use My Location</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ RESULTS ═══════════════════════════════════════════════ -->
+<section class="results-section" id="results-section">
+  <div class="results-toolbar" id="results-toolbar" style="display:none">
+    <span class="results-count" id="results-count">0 buses found</span>
+    <div class="sort-wrap">
+      <label class="field-label">Sort by:</label>
+      <select id="sort-select" class="opt-input sort-select">
+        <option value="departure">Departure</option>
+        <option value="fare">Fare ↑</option>
+        <option value="seats">Seats Available</option>
+        <option value="rating">Rating ↓</option>
+        <option value="duration">Duration ↑</option>
+      </select>
+    </div>
+  </div>
+  <div id="results-container">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">🚌</div>
+      <div class="empty-title">Find your next journey</div>
+      <div class="empty-sub">Search for buses between any two cities across India</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LIVE MAP ══════════════════════════════════════════════ -->
+<section class="map-section" id="map-section">
+  <div class="map-header">
+    <span class="map-title">🗺️ Live Bus Map — India</span>
+    <div class="map-controls">
+      <button class="map-ctrl-btn" id="map-recenter">⊕ Recenter</button>
+      <button class="map-ctrl-btn" id="map-traffic">🚦 Traffic</button>
+      <button class="map-ctrl-btn" id="map-fullscreen">⛶ Fullscreen</button>
+    </div>
+  </div>
+  <div id="map" role="main" aria-label="Live bus map"></div>
+  <div class="map-legend">
+    <div class="legend-item"><span class="legend-dot" style="background:#FF6B00"></span>Running</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#4caf50"></span>On Time</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#f44336"></span>Delayed</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#9c27b0"></span>Arrived</div>
+  </div>
+</section>
+
+<!-- ═══ FARE CALCULATOR ═══════════════════════════════════════ -->
+<section class="widget-section" id="fare-section">
+  <div class="widget-card glass-card">
+    <h2 class="widget-title">💰 Fare Estimator</h2>
+    <div class="fare-grid">
+      <div class="city-field">
+        <label class="field-label">From</label>
+        <input type="text" id="fare-from" class="city-input" placeholder="Origin city" autocomplete="off" />
+        <ul class="autocomplete-list" id="fare-from-ac"></ul>
+      </div>
+      <div class="city-field">
+        <label class="field-label">To</label>
+        <input type="text" id="fare-to" class="city-input" placeholder="Destination city" autocomplete="off" />
+        <ul class="autocomplete-list" id="fare-to-ac"></ul>
+      </div>
+      <button class="primary-btn compact" id="fare-calc-btn">Calculate</button>
+    </div>
+    <div id="fare-result" class="fare-result-wrap"></div>
+  </div>
+</section>
+
+<!-- ═══ MODALS ════════════════════════════════════════════════ -->
+
+<!-- Seat Map Modal -->
+<div class="modal-overlay" id="seat-modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">💺 Seat Map</span>
+      <button class="modal-close" id="seat-modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="seat-modal-body"></div>
+  </div>
+</div>
+
+<!-- Arrival Alert Modal -->
+<div class="modal-overlay" id="alert-modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">🔔 Set Arrival Alert</span>
+      <button class="modal-close" id="alert-modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="alert-modal-body">
+      <p class="modal-desc">Get notified before your stop. Works even when the tab is in background.</p>
+      <label class="field-label">Alert me when bus is:</label>
+      <div class="alert-options">
+        <button class="alert-opt active" data-km="5">5 km away</button>
+        <button class="alert-opt" data-km="10">10 km away</button>
+        <button class="alert-opt" data-km="20">20 km away</button>
+        <button class="alert-opt" data-km="30">30 km away</button>
+      </div>
+      <label class="field-label" style="margin-top:12px">Or before arrival by:</label>
+      <div class="alert-options">
+        <button class="alert-opt-min" data-min="10">10 min</button>
+        <button class="alert-opt-min" data-min="20">20 min</button>
+        <button class="alert-opt-min" data-min="30">30 min</button>
+      </div>
+      <button class="primary-btn" id="set-alert-btn" style="margin-top:16px">🔔 Activate Alert</button>
+      <div id="alert-status" class="alert-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Reviews Modal -->
+<div class="modal-overlay" id="reviews-modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">⭐ Passenger Reviews</span>
+      <button class="modal-close" id="reviews-modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="reviews-modal-body"></div>
+  </div>
+</div>
+
+<!-- Bus Stand Live Board Modal -->
+<div class="modal-overlay" id="board-modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal-box" style="max-width:680px">
+    <div class="modal-header">
+      <span class="modal-title" id="board-modal-title">📍 Bus Stand Live Board</span>
+      <button class="modal-close" id="board-modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="board-modal-body"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-logo">🚌 Where Is My Bus</div>
+    <div class="footer-links">
+      <a href="#">About</a>
+      <a href="#">Privacy</a>
+      <a href="#">API</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-note">© 2026 Where Is My Bus · Real-Time Bus Tracking India</div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
